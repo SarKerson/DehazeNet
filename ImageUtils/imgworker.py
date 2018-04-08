@@ -1,7 +1,6 @@
 #from scipy.misc import imsave, imshow, imread
 
 import numpy as np
-import numpy.matlib as ml
 import math
 import cv2
 import tensorflow as tf
@@ -136,6 +135,21 @@ def em_haze_free(source_img, A, t_map):
     ret[:,:,2]/=t_map
     return ret+A
 
+def dehazeFun(sourceImg, t, A, delta):
+    t = np.maximum(np.abs(t), 0.0001) * delta
+    R = np.divide(sourceImg[:, :, 0] - A[0], t)
+    R = np.add(R, A[0])
+    R = np.expand_dims(R, axis=2)
+    G = np.divide(sourceImg[:, :, 1] - A[1], t)
+    G = np.add(G, A[1])
+    G = np.expand_dims(G, axis=2)
+    B = np.divide(sourceImg[:, :, 2] - A[2], t)
+    B = np.add(B, A[2])
+    B = np.expand_dims(B, axis=2)
+    dstImg = np.concatenate([R, G, B], axis=2)
+    return dstImg
+
+
 def em_transmission_map(sess, source_img, patch_size=15, w=0.95):
     return 1-w*cal_dark_channel(sess, source_img, patch_size)
 
@@ -153,28 +167,45 @@ def auto_tune_single(I, percent):
 
 def equlize_hist(source_img):
     source_img=np.clip(source_img, 0, 1)
-    source_img=source_img*255
+    source_img=source_img*255.0
     source_img=source_img.astype('uint8')
     ret_0 = np.reshape(cv2.equalizeHist(source_img[:,:,0]), [source_img.shape[0], source_img.shape[1], 1])
     ret_1 = np.reshape(cv2.equalizeHist(source_img[:,:,1]), [source_img.shape[0], source_img.shape[1], 1])
     ret_2 = np.reshape(cv2.equalizeHist(source_img[:,:,2]), [source_img.shape[0], source_img.shape[1], 1])
     ret = np.concatenate((ret_0,ret_1,ret_2), axis=2)
     ret = ret.astype('float32')
-    ret = ret/255
+    ret = ret/255.0
     return ret
 
 def auto_tune(I, percent=0.001):
     o_0 = np.reshape(auto_tune_single(I[:,:,0],percent), [I.shape[0],I.shape[1],1])
     o_1 = np.reshape(auto_tune_single(I[:,:,1],percent), [I.shape[0],I.shape[1],1])
     o_2 = np.reshape(auto_tune_single(I[:,:,2],percent), [I.shape[0],I.shape[1],1])
+    # print(o_0[0,0,0])
     return np.concatenate((o_0,o_1,o_2),axis=2)
+
+def boundcon(hazeImg, A, C0, C1, patch_size=3):  # hazeImg, A -> 0 ~ 255.0,
+    if len(A) == 1:
+        A = A * np.ones([3, 1])
+    C0 = C0 * np.ones([3, 1])
+    C1 = C1 * np.ones([3, 1])
+    t_r = np.maximum((A[0] - hazeImg[:,:,0]) / (A[0] - C0[0]),
+                     (hazeImg[:,:,0] - A[0]) / C1[0] - A[0]);
+    t_r = np.expand_dims(t_r, axis=2)
+    t_g = np.maximum((A[1] - hazeImg[:,:,1]) / (A[1] - C0[1]),
+                     (hazeImg[:,:,1] - A[1]) / C1[1] - A[1]);
+    t_g = np.expand_dims(t_g, axis=2)
+    t_b = np.maximum((A[2] - hazeImg[:,:,2]) / (A[2] - C0[2]),
+                     (hazeImg[:,:,2] - A[2]) / C1[2] - A[2]);
+    t_b = np.expand_dims(t_b, axis=2)
+    t_b = np.max(np.concatenate([t_r, t_g, t_b], axis=2), axis=2)
+    return t_b
 
 def haze_free(sess, source_img, patch_size=15):
     #d_map = cal_dark_channel_fast(source_img, patch_size=15)
     d_map = cal_dark_channel(sess, source_img, patch_size)
     t_map = em_transmission_map_d(d_map)
-    #imshow(t_map)
-    t_map = guidedfilter(source_img,t_map,20,0.001)
-    #imshow(t_map)
+    t_map = guidedfilter(source_img, t_map, 20, 0.001)
     A = em_A_color(source_img, d_map)
     return em_haze_free(source_img, A, t_map)
+

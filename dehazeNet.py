@@ -1,7 +1,5 @@
 import tensorflow as tf
 import numpy as np
-from scipy.misc import imshow
-from scipy.misc import imread
 
 def dehazeNet(data, input_maps):
 
@@ -56,12 +54,3 @@ def dehazeNet(data, input_maps):
         network[name] = current
 
     return network
-
-# if __name__ == '__main__':
-#     srcImg = imread('/home/sar/SarKerson/dehaze/DnCNN/DeCNN/haze/10.jpg')
-#     net = dehazeNet('/home/sar/SarKerson/dehaze/DnCNN/DeCNN/data/model_15_12b_64/model_15_12b_64-epoch-300.mat', srcImg)
-#     print('###########################net:\n' + str(net))
-#     output = net['layer24'][0]
-#     print('$$$$$:' + str(output.get_shape))
-#     # print('###########################avg:\n' + str(avg))
-#     # print('###########################clname:\n' + str(clname))
