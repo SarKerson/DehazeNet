@@ -5,8 +5,8 @@ from dehazeNet import dehazeNet
 import cv2
 import time
 from ImageUtils.imgworker import cal_dark_channel_fast, dehazeFun, guidedfilter, em_A_color, auto_tune, boundcon
-MAT_PATH = '/home/sar/SarKerson/dehaze/DnCNN/DeCNN/data/model_15_12b_64/model_15_12b_64-epoch-300.mat'
-IMG_PATH = '/home/sar/SarKerson/dehaze/DnCNN/DeCNN/haze/real3.jpg'
+MAT_PATH = './model/model_15_12b_64-epoch-300.mat'
+IMG_PATH = './input/d.jpg'
 # build the graph
 graph = tf.Graph()
 with graph.as_default():
@@ -18,7 +18,7 @@ with graph.as_default():
     inputSize = meta[0][0][0][0][2]
     image_size = np.squeeze(inputSize)
     input_maps = tf.placeholder(tf.float32, [None, 300, 400, 1])
-    net = dehazeNet(data, input_maps)
+    net, _ = dehazeNet(data, input_maps)
     output = net['layer24'][0]
 
 sess = tf.Session(graph = graph)
