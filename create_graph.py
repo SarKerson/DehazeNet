@@ -1,8 +1,8 @@
 import tensorflow as tf
 from scipy.io import loadmat
 import numpy as np
-import cv2
-from tensorflow.python.framework import graph_util
+import uff
+import tensorrt
 from dehazeNet import create_dehazeNet
 
 
@@ -109,24 +109,20 @@ def main():
     image_batch = tf.get_variable("input",
                                   shape=[1, 300, 400, 1],
                                   dtype=tf.float32)
-    net, tmp = create_dehazeNet(image_batch)
-    img = cv2.imread(IMG_PATH)
-    img = img / 255.0
-    img = img.astype('float32')
-    img = cv2.resize(img, (400, 300), interpolation=cv2.INTER_LINEAR)
-
-    d_map = cal_dark_channel_fast(img, patch_size=15)
-    A = em_A_color(img, d_map)
-    t_map = boundcon(hazeImg=img * 255.0, A=A * 255.0, C0=30.0, C1=300.0, patch_size=3)  # 255
-    cv2.imwrite("t_pre.png", t_map * 255.0)
-    t_map = np.expand_dims(t_map, 0)
-    t_map = np.expand_dims(t_map, 3)
+    net = create_dehazeNet(image_batch)
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        output = sess.run(net, feed_dict={image_batch : t_map})
-        output = np.reshape(output, [300, 400])
-        print(output)
+        init_graph(sess)
+        graphdef = tf.get_default_graph().as_graph_def()
+        frozen_graph = tf.graph_util.convert_variables_to_constants(sess,
+                                                                    graphdef,
+                                                                    ['conv12/output'])
+        with tf.gfile.GFile('./model/new-model.pb', "wb") as f:
+            f.write(frozen_graph.SerializeToString())
+
+        uff_model = uff.from_tensorflow(graphdef=frozen_graph,
+                                        output_nodes=['conv12/output'])
 
 
 if __name__ == '__main__':

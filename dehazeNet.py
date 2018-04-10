@@ -204,9 +204,9 @@ def create_dehazeNet(X):
                             padding='SAME')
         biases = tf.get_variable('biases',
                                  shape=[1])
-        conv12 = tf.nn.bias_add(conv, biases)
+        conv12 = tf.nn.bias_add(conv, biases, name='output')
 
-    return conv12, conv1
+    return conv12
 
 
 
