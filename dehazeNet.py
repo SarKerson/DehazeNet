@@ -206,7 +206,7 @@ def create_dehazeNet(X):
                                  shape=[1])
         conv12 = tf.nn.bias_add(conv, biases)
 
-    return conv12
+    return conv12, conv1
 
 
 
