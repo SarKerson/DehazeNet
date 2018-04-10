@@ -1,6 +1,7 @@
 import tensorflow as tf
 from scipy.io import loadmat
 import numpy as np
+from dehazeNet import create_dehazeNet
 MAT_PATH = './model/model_15_12b_64-epoch-300.mat'
 
 
@@ -26,9 +27,8 @@ def loadDehazeNet(data):
             if len(kernel.shape) == 3:
                 kernel = np.expand_dims(kernel, 3)
             bias = np.squeeze(bias).reshape(-1)
-            data_dict['conv' + str(layer_num)]['weight'] = kernel
-            data_dict['conv' + str(layer_num)]['bias'] = bias
-            data_dict['conv' + str(layer_num)]['stride'] = np.array([1, stride[0], stride[0], 1])
+            data_dict['conv' + str(layer_num)]['weights'] = kernel
+            data_dict['conv' + str(layer_num)]['biases'] = bias
             print name, 'stride:', stride, 'kernel size:', np.shape(kernel)
         elif layer_type == 'relu':
             layer_num += 1
@@ -44,7 +44,6 @@ def loadDehazeNet(data):
             offset = np.transpose(offset)[0]
             data_dict['conv' + str(layer_num)]['scale'] = scale
             data_dict['conv' + str(layer_num)]['offset'] = offset
-            data_dict['conv' + str(layer_num)]['epsilon'] = epsilon
             print name + " " + layer_type
 
     return data_dict
@@ -53,22 +52,43 @@ data = loadmat(MAT_PATH)
 data = data['net']
 data_dict = loadDehazeNet(data=data)
 
-# for layer in data_dict:
-#     for opt in data_dict[layer]:
-#         if opt == "weight":
-#
-def init_graph(sess)
+for layer in data_dict:
+    print(layer)
+    for opt in data_dict[layer]:
+        if opt == 'epsilon':
+            print(data_dict[layer][opt])
+        elif opt != 'stride':
+            print(opt + ":" + str(data_dict[layer][opt].shape))
+        else:
+            print(opt + ":" + str(data_dict[layer][opt]))
+
+def init_graph(sess):
     for layer in data_dict:
         with tf.variable_scope(layer, reuse=True):
             for param_name, data in data_dict[layer].iteritems():
-                try:
-                    var = tf.get_variable(param_name)
-                    sess.run(var.assign(data))
-                except ValueError:
-                    print("VALUE ERROR!")
+                var = tf.get_variable(param_name, trainable=False)
+                sess.run(var.assign(data))
 
-def main:
+def main():
+    image_batch = tf.constant(0,
+                              dtype=tf.float32,
+                              shape=[1, 300, 400, 1])
+    net = create_dehazeNet(image_batch)
+    var_list = tf.global_variables()
 
+    # config = tf.ConfigProto()
+    # config.gpu_op
+
+    with tf.Session() as sess:
+        init = tf.global_variables_initializer()
+        sess.run(init)
+
+        init_graph(sess)
+
+        saver = tf.train.Saver(var_list=var_list,
+                               write_version=1)
+        saver.save(sess,
+                   "/tmp/dehazeNet/dehazeNet-model")
 
 if __name__ == '__main__':
     main()

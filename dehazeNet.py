@@ -26,8 +26,8 @@ def dehazeNet(data, input_maps):
             else:
                 kernel = tf.constant(kernel)
             bias = np.squeeze(bias).reshape(-1)
-            data_dict['conv' + str(layer_num)]['weight'] = kernel
-            data_dict['conv' + str(layer_num)]['bias'] = bias
+            data_dict['conv' + str(layer_num)]['weights'] = kernel
+            data_dict['conv' + str(layer_num)]['biases'] = bias
             data_dict['conv' + str(layer_num)]['stride'] = np.array([1, stride[0], stride[0], 1])
             conv = tf.nn.conv2d(current, kernel,
                                 strides=(1, stride[0], stride[0], 1), padding=padding)
@@ -65,3 +65,149 @@ def dehazeNet(data, input_maps):
         network[name] = current
 
     return network, data_dict
+
+def create_dehazeNet(X):
+    with tf.variable_scope('conv1') as scope:
+        weights = tf.get_variable('weights', shape = [3, 3, 1, 64])
+        conv = tf.nn.conv2d(X,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv1 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv2') as scope:
+        weights = tf.get_variable('weights', shape = [3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv1,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv2 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv3') as scope:
+        weights = tf.get_variable('weights', shape = [3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv2,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv3 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv4') as scope:
+        weights = tf.get_variable('weights', shape=[3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv3,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv4 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv5') as scope:
+        weights = tf.get_variable('weights', shape=[3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv4,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv5 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv6') as scope:
+        weights = tf.get_variable('weights', shape=[3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv5,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        axis = [0, 1, 2]
+        mean, var = tf.nn.moments(bias, axes=axis)
+        scale = tf.get_variable('scale',
+                                shape=[64])
+        offset = tf.get_variable('offset',
+                                 shape=[64])
+        bn = tf.nn.batch_normalization(bias, mean=mean, variance=var,
+                                            offset=offset, scale=scale, variance_epsilon=1.0e-05)
+        conv6 = tf.nn.relu(bn)
+
+    with tf.variable_scope('conv7') as scope:
+        weights = tf.get_variable('weights', shape=[3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv6,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv7 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv8') as scope:
+        weights = tf.get_variable('weights', shape=[3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv7,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv8 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv9') as scope:
+        weights = tf.get_variable('weights', shape=[3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv8,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv9 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv10') as scope:
+        weights = tf.get_variable('weights', shape=[3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv9,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv10 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv11') as scope:
+        weights = tf.get_variable('weights', shape=[3, 3, 64, 64])
+        conv = tf.nn.conv2d(conv10,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[64])
+        bias = tf.nn.bias_add(conv, biases)
+        conv11 = tf.nn.relu(bias)
+
+    with tf.variable_scope('conv12') as scope:
+        weights = tf.get_variable('weights', shape=[3, 3, 64, 1])
+        conv = tf.nn.conv2d(conv11,
+                            weights,
+                            strides=[1, 1, 1, 1],
+                            padding='SAME')
+        biases = tf.get_variable('biases',
+                                 shape=[1])
+        conv12 = tf.nn.bias_add(conv, biases)
+
+    return conv12
+
+
+
+
