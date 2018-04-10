@@ -132,16 +132,10 @@ def create_dehazeNet(X):
                                  shape=[64])
         bias = tf.nn.bias_add(conv, biases)
         axis = [0, 1, 2]
-        # mean, var = tf.nn.moments(bias, axes=axis)
-
         mean = tf.reduce_mean(bias, axis=axis)
-        var_ = tf.add(bias, -mean)
+        var_ = tf.subtract(bias, mean)
         var_ = tf.multiply(var_, var_)
         var = tf.reduce_mean(var_, axis=axis)
-        print("mean:" + str(mean))
-        print("var:" + str(var))
-        # print("mean_:" + str(mean_))
-        # print("var_:" + str(var_))
         scale = tf.get_variable('scale',
                                 shape=[64])
         offset = tf.get_variable('offset',
