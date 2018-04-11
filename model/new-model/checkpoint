@@ -1,0 +1,2 @@
+model_checkpoint_path: "dehazeNet"
+all_model_checkpoint_paths: "dehazeNet"
