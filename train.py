@@ -84,7 +84,7 @@ def train():
     saver = tf.train.Saver()
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         sess.run(tf.global_variables_initializer());
-        for epoch in range(1):
+        for epoch in range(1000):
             for i in range(int(NUM_TRAIN / BATCH_SIZE)):
                 batch = []
                 for j in range(BATCH_SIZE):
