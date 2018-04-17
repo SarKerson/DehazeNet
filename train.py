@@ -102,6 +102,12 @@ def train():
 
                 saver.save(sess, "./model/new-model/new-model",
                            global_step=global_step)
+        graphdef = tf.get_default_graph().as_graph_def()
+        frozen_graph = tf.graph_util.convert_variables_to_constants(sess,
+                                                                    graphdef,
+                                                                    ['conv12/output'])
+        with tf.gfile.GFile('./model/new-model/new-model.pb', "wb") as f:
+            f.write(frozen_graph.SerializeToString())
 
 if __name__ == '__main__':
-    print(data_train.shape)
+    train()
