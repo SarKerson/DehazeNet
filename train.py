@@ -2,6 +2,8 @@ import tensorflow as tf
 from scipy.io import loadmat
 import numpy as np
 from dehazeNet import create_dehazeNet
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 import cv2
 
@@ -17,7 +19,7 @@ NUM_TEST=200
 LEARNING_RATE_BASE = 0.01
 MOVING_AVG_DEC = 0.99
 LEARNING_RATE_DEC = 0.99
-BATCH_SIZE = 200
+BATCH_SIZE = 50
 
 data = loadmat(MAT_PATH)
 data_train = np.zeros([NUM_TRAIN, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL])
