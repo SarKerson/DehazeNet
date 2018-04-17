@@ -3,6 +3,7 @@ from scipy.io import loadmat
 import numpy as np
 from dehazeNet import create_dehazeNet
 
+import cv2
 
 from ImageUtils.imgworker import cal_dark_channel_fast, dehazeFun, guidedfilter, em_A_color, auto_tune, boundcon
 MAT_PATH = './model/imdb2.mat'
@@ -30,8 +31,6 @@ for i in range(800):
 for i in range(200):
     data_test[i,:,:,0]=data['data'][:,:,0,800+i]
     label_test[i,:,:,0]=data['label'][:,:,0,800+i]
-
-BATCH_SIZE = 5
 
 def init_graph(sess):
     for i in range(1, 13):
@@ -75,7 +74,7 @@ def train():
 
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
 
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.50)
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.20)
 
     with tf.control_dependencies([optimizer, variable_average_op]):
         train_op = tf.no_op(name="train")
@@ -83,8 +82,7 @@ def train():
     saver = tf.train.Saver()
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         sess.run(tf.global_variables_initializer());
-        init_graph(sess)
-        for epoch in range(1000):
+        for epoch in range(1):
             for i in range(int(NUM_TRAIN / BATCH_SIZE)):
                 batch = []
                 for j in range(BATCH_SIZE):
@@ -92,6 +90,8 @@ def train():
 
                 batch_X = data_train[batch, :, :, :]
                 batch_Y = label_train[batch, :, :, :]
+                batch_X = np.reshape(batch_X, [-1, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL])
+                batch_Y = np.reshape(batch_Y, [-1, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL])
 
                 _, loss_value, step = sess.run([train_op, loss, global_step],
                                                feed_dict={X: batch_X, Y: batch_Y})
